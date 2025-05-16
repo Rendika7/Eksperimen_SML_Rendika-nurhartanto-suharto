@@ -115,9 +115,6 @@ def preprocess_data(file_path, save_path):
     # 7. Menyimpan Dataset yang Sudah Diproses
     cleaned_data.to_csv(save_path, index=False)
 
-    # 7. Menyimpan Dataset yang Sudah Diproses
-    cleaned_data.to_csv("Membangun_model/student-depression-dataset_preprocessing.csv", index=False)
-
     return cleaned_data
 
 
@@ -127,5 +124,4 @@ if __name__ == "__main__":
     save_path = 'preprocessing/student-depression-dataset_preprocessing.csv'  # Ganti dengan path untuk menyimpan data yang sudah diproses
     
     processed_data = preprocess_data(file_path, save_path)
-    print(f"[1] Dataset berhasil diproses dan disimpan di {save_path}")
-    print(f"[2] Dataset berhasil diproses dan disimpan di Membangun_model/student-depression-dataset_preprocessing.csv")
+    print(f"[✅] Dataset berhasil diproses dan disimpan di {save_path}")
