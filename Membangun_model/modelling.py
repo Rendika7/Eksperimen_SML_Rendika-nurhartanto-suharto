@@ -3,6 +3,7 @@ import os
 import numpy as np
 import mlflow
 import mlflow.sklearn
+from mlflow.tracking import MlflowClient
 from sklearn.model_selection import train_test_split, GridSearchCV
 from sklearn.datasets import load_iris
 from sklearn.metrics import accuracy_score, f1_score, precision_score, recall_score, classification_report
@@ -200,7 +201,7 @@ param_grids = {
     }
 }
 
-# Start the MLflow experiment for tuning the best model
+# Experiment 2:  Start the MLflow experiment for tuning the best model
 mlflow.set_experiment(f"Tuning_{best_model_name}")  # Set experiment name to reflect tuning
 
 # Get the correct hyperparameter grid for the best model
@@ -252,9 +253,51 @@ if best_model_param_grid:
         # Log the best model as an artifact
         mlflow.sklearn.log_model(best_model_tuned, f"{best_model_name}_tuned_model")  # Log the model
 
-        # You can also log other artifacts, like plots or additional files, if needed
-        # For example, if you have any plots or CSVs to log:
-        # mlflow.log_artifact("path_to_your_artifact_file")
+        # Get the current run ID
+        run_id = mlflow.active_run().info.run_id
+
+        # The model URI for registration (path to the logged model artifact)
+        model_uri = f"runs:/{run_id}/{best_model_name}_tuned_model"
+
+        # Create an MLflow client to interact with the model registry
+        client = MlflowClient()
+
+        # Register the model in MLflow Model Registry
+        model_name = best_model_name.replace(" ", "_")  # Model name without spaces
+        registered_model = client.create_registered_model(model_name)
+
+        # Register a new model version from the run
+        model_version = client.create_model_version(
+            name=model_name,
+            source=model_uri,
+            run_id=run_id
+        )
+        print(f"Registered model version: {model_version.version} for model '{model_name}'")
+        
+        # ======= Copy existing version to new version and move it to Production =======
+        # Here "copy" by registering a new version with the same source, then transition it
+
+        # Get source URI of the registered model version (the one we just created)
+        existing_version_info = client.get_model_version(name=model_name, version=model_version.version)
+        existing_model_source = existing_version_info.source
+
+        # Create a new model version as a copy from the existing source
+        new_version = client.create_model_version(
+            name=model_name,
+            source=existing_model_source,
+            run_id=None  # None because this is a "copy"
+        )
+
+        print(f"Created new model version: {new_version.version}")
+
+        # Transition the new version to Production stage
+        client.transition_model_version_stage(
+            name=model_name,
+            version=new_version.version,
+            stage="Production"
+        )
+
+        print(f"Model version {new_version.version} is now in Production stage")
 
         print(f"Tuned Train Accuracy: {tuned_train_accuracy}")
         print(f"Tuned Test Accuracy: {tuned_test_accuracy}")
