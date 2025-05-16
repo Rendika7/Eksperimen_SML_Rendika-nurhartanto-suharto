@@ -60,10 +60,16 @@ models = {
     "AdaBoost": AdaBoostClassifier(random_state=42, n_estimators=50, learning_rate=1.0),
     "Ridge Classifier": RidgeClassifier(alpha=1.0),
 }
+# Initialize dagshub setup
+import dagshub
+dagshub.init(repo_owner='Rendika7', repo_name='Eksperimen_SML_Rendika-nurhartanto-suharto', mlflow=True)
 
 # Experiment 1: Train all models with their default parameters and log metrics
 mlflow.set_experiment("Model_Training_Default_Parameters")  # Ganti dengan nama eksperimen yang lebih sesuai
-mlflow.set_tracking_uri("http://127.0.0.1:5000")  # Pastikan MLflow UI berjalan di URI ini
+# mlflow.set_tracking_uri("http://127.0.0.1:5000")  # This points MLflow to a local MLflow tracking server running on your own machine
+
+mlflow.set_tracking_uri("https://dagshub.com/Rendika7/Eksperimen_SML_Rendika-nurhartanto-suharto.mlflow")  # This points MLflow to a remote MLflow tracking server hosted by DagsHub (a cloud platform).
+
 
 # Initialize a dictionary to store the results
 model_results = {}
